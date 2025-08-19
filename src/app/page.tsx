@@ -24,7 +24,7 @@ export default function Home() {
           <li className="tracking-[-.01em]">
             click on{" "}
             <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              "Go to Feed"
+              Go to Feed
             </code>{" "}
             button.
           </li>
