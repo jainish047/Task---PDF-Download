@@ -8,21 +8,30 @@ import jsPDF from "jspdf";
 export default function Feed() {
   const TandCRef = useRef<HTMLDivElement>(null);
   const entryRefs = useRef<Record<number, HTMLDivElement | null>>({});
-
+  
   const downloadElementAsPDF = async (element: HTMLElement, name: string) => {
-    // const canvas = await html2canvas(element);
     const canvas = await html2canvas(element, {
-      backgroundColor: "#000000", // force white background
+      backgroundColor: "#0a0a0a", // match your dark theme
       scale: 2, // improve resolution
       useCORS: true, // allow remote assets
+      width: element.offsetWidth,
+      height: element.offsetHeight,
     });
+    
     const imgData = canvas.toDataURL("image/png");
-
     const pdf = new jsPDF("p", "mm", "a4");
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+    
+    // If content is too tall, we might need to split it across pages
+    if (pdfHeight > pdf.internal.pageSize.getHeight()) {
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const ratio = pageHeight / pdfHeight;
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pageHeight);
+    } else {
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+    }
+    
     pdf.save(`${name}.pdf`);
   };
 
@@ -41,16 +50,24 @@ export default function Feed() {
       {/* Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {entries.map((entry) => (
-          <div key={entry.id} className="relative bg-gray-900">
+          <div key={entry.id} className="relative">
             <div
-              className="h-full rounded p-3 shadow w-full"
+              style={{
+                backgroundColor: '#0a0a0a',
+                borderRadius: '0.5rem',
+                padding: '1rem',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                width: '100%',
+                height: '100%',
+                minHeight: '200px',
+                border: '1px solid #374151'
+              }}
               ref={(el) => {
                 entryRefs.current[entry.id] = el;
               }}
             >
               <Card entry={entry} />
             </div>
-
             <button
               onClick={() => handleDownloadEntry(entry.id, "Question-Answer")}
               className="cursor-pointer absolute bottom-2 right-2 px-2 py-1 text-xs text-white border-2 border-blue-700 rounded bg-gray-900 hover:bg-blue-700 shadow"
@@ -65,7 +82,13 @@ export default function Feed() {
       <div className="p-4 border border-gray-600 rounded">
         <div
           ref={TandCRef}
-          className="p-3"
+          style={{
+            backgroundColor: '#0a0a0a',
+            padding: '1.5rem',
+            borderRadius: '0.5rem',
+            fontFamily: 'Arial, sans-serif',
+            border: '1px solid #374151'
+          }}
           dangerouslySetInnerHTML={{ __html: TandC.content }}
         />
         <button
